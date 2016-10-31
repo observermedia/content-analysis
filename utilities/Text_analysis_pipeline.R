@@ -82,7 +82,7 @@ df.new<-df[-as.numeric(empty.rows),]
 # Topic Modeling ----------------------------------------------------------
 
 #TODO: optimize number of topics & discussion of trade off
-num_topics = 5
+num_topics = 7
 
 #Start with lda we can build from here 
 lda_object<- LDA(dtm.new,num_topics)
@@ -124,17 +124,22 @@ topic.space.clustered.news[[1]][[3]]
 
 #Generate viz --opens in browser 
 vizme <- topicmodels_json_ldavis(lda_object,content.new,dtm.new)
-serVis(vizme,out.dir = 'sample_data_viz')
+serVis(vizme,out.dir = 'viz_7topics')
 
 
 
 # Assign topic labels + model subtopics -----------------------------------
 
+#TODO: fix bug here with topic name assignment
+
+df.new<-df.new[,-c(10,9,8)]
 #Assing topic names here
-#topicnames <- c('')
+topicnames <- c('Music','Startups','International Politics', 'US Politics', 'NY Politics', 'Art', 'Culture')
+topicnames <- c('Culture','Music','Art', 'International politics', 'Startups', 'US Politics', 'NY Politics')
+
 
 gammaDF <- as.data.frame(lda_object@gamma) 
-names(gammaDF) <- c(1:num_topics) #assign topic names here
+names(gammaDF) <- c(topicnames) #assign topic names here
 
 toptopics <- as.data.frame(cbind(document = row.names(gammaDF), 
                                  topic = apply(gammaDF,1,function(x) names(gammaDF)[which(x==max(x))])))
@@ -145,6 +150,7 @@ ggplot(data=toptopics,aes(x=topic)) + geom_bar(fill='#99c2ff',colour='black') + 
 
 #bind topic assignment to original df
 df.new<-cbind(df.new,toptopics$topic)
+df.new$topic <- df.new$'toptopics$topic'
 
 #can now filter on a particular topic and topic model again to discover subtopics
 
