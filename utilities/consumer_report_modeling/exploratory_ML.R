@@ -64,15 +64,15 @@ min.model <- lm(Pageviews ~ 1, data=modelme2)
 biggest <- formula(lm(Pageviews~.,modelme2))
 step(min.model, direction='forward', scope=biggest)
 
-regPageViews2 <- lm( Pageviews ~ X..Exit + WordCount + flesh_score + 
-                      NY_Pol2 + compound_score + int_pol4 + int_pol2 + Art1 + Music3 + 
-                      int_pol5 + Culture1 + Startups2 + num_links_observer + US_Pol5 + 
-                      NY_Pol1 + Music1 + Startups5 + US_Pol4 + Bounce.Rate + Music5 + 
-                      Music4, data = modelme2)
+regPageViews2 <- lm( Pageviews ~ X..Exit + time + neg_score + NY_Pol2 + 
+                       flesh_score + WordCount + int_pol2 + `International politics` + 
+                       Music3 + Art1 + Bounce.Rate + Culture1 + Startups2 + num_links_observer + 
+                       NY_Pol1 + US_Pol5 + Music5 + US_Pol4 + Startups5 + Music1 + 
+                       compound_score + int_pol3 + Music4, data = modelme2)
 
 
 summary(regPageViews2)
-coefplot(regPageViews2)
+coefplot(regPageViews2, "Page Views")
 
 
 ###
@@ -93,7 +93,7 @@ regAvgTime2 <- lm(formula = time ~ WordCount + X..Exit + Bounce.Rate + compound_
                      Music + int_pol5 + Art + Startups4 + Art2, data = modelme2)
 
 summary(regAvgTime2)
-coefplot(regAvgTime2)
+coefplot(regAvgTime2,title="Avg Time on Page")
 
 
 
