@@ -4,13 +4,18 @@
 ###
 
 library(caret)
+library(betareg)
+library(coefplot)
+#library(arm)
+library(ggplot2)
 
 
 
 #load data
 setwd('~/Data')
 load('consumer_reports_envr.RData')
-
+modelme <- read.csv('model_dataframe.csv')
+modelme <- modelme[,-c(1,7)]
 
 
 # PreProcessing -----------------------------------------------------------
@@ -42,14 +47,18 @@ modelme2<-modelme2[, -comboInfo$remove]
 
 #Center and scale (normalize) all variables
   #intercept term (in LR) will now be interpreted as the expected value of Y
+
+exit <- modelme2$X..Exit
+bounce <- modelme2$Bounce.Rate
 preProcValues <- preProcess(modelme2, method = c("center", "scale"))
 modelme2<- predict(preProcValues, modelme2)
-
+modelme2$X..Exit <- exit
+modelme2$Bounce.Rate <- bounce
 
 #Filter out all articles where page views is greater than 3SDs away from mean
 #basically removing outliers
-modelme2 <- modelme2[!modelme2$Pageviews > (mean(modelme2$Pageviews) + 3*sd(modelme2$Pageviews)),]
-modelme2 <- modelme2[!modelme2$Pageviews < (mean(modelme2$Pageviews) -  3*sd(modelme2$Pageviews)),]
+modelme2 <- modelme2[!modelme2$X..Exit > (mean(modelme2$X..Exit) + 3*sd(modelme2$X..Exit)),]
+modelme2 <- modelme2[!modelme2$X..Exit < (mean(modelme2$X..Exit) -  3*sd(modelme2$X..Exit)),]
 
 # Modeling ----------------------------------------------------------------
 
@@ -98,3 +107,143 @@ coefplot(regAvgTime2,title="Avg Time on Page")
 
 
 
+
+###
+#% Exit
+###
+#Full model
+betareg <- betareg(modelme2$X..Exit ~ Pageviews                     
+                   +Bounce.Rate                   
+                   +Politics_B1                   
+                   +Politics_B2                   
+                   +Politics_B3                   
+                   +Politics_B4                   
+                   +Politics_B5                   
+                   +Entertainment_Culture1        
+                   +Entertainment_Culture2        
+                   +Entertainment_Culture3        
+                   +Entertainment_Culture4        
+                   +Entertainment_Culture5        
+                   +Business_tech_internetCulture1
+                   +Business_tech_internetCulture2
+                   +Business_tech_internetCulture3
+                   +Business_tech_internetCulture4
+                   +Business_tech_internetCulture5
+                   +Politics_A1                   
+                   +Politics_A2                   
+                   +Politics_A3                   
+                   +Politics_A4                   
+                   +Politics_A5 
+                   +Art_leisure1                  
+                   +Art_leisure2                  
+                   +Art_leisure3                  
+                   +Art_leisure4
+                   +politics_B                    
+                   +Entertainment_Culture         
+                   +Business_tech_internetCulture 
+                   +Politics_A
+                   +num_images                    
+                   +num_links                     
+                   +wiki_links                    
+                   +pos_score                     
+                   +neg_score                     
+                   +neu_score                     
+                   +compound_score                
+                   +flesh_score                   
+                   +WordCount                     
+                   +WordCountTitle                
+                   +time,
+                   data=modelme2,link = "clogclog")
+summary(betareg)
+sapply(c("logit","probit","cloglog","cauchit","loglog"), 
+       function(x) logLik(update(betareg,link=x)))
+
+#Modeling after feature selection
+betareg2 <- betareg(modelme2$X..Exit ~ Pageviews                     
+                   +Bounce.Rate                   
+                   +Entertainment_Culture2        
+                   +Entertainment_Culture3        
+                   #+Business_tech_internetCulture1
+                   #+Business_tech_internetCulture2
+                   +Entertainment_Culture         
+                   #+Business_tech_internetCulture 
+                   +Politics_A
+                   +WordCount                     
+                   +time,
+                   data=modelme2,link = "cauchit")
+summary(betareg2)
+sapply(c("logit","probit","cloglog","cauchit","loglog"), 
+       function(x) logLik(update(betareg2,link=x)))
+plot(betareg2)
+lrtest(betareg,betareg2)
+coefplot.glm(betareg2)
+
+
+
+###
+#Bounce Rate
+###
+
+bouncereg<- betareg(modelme2$Bounce.Rate ~ Pageviews
+                    +X..Exit                       
+                    +Politics_B1                   
+                    +Politics_B2                   
+                    +Politics_B3                   
+                    +Politics_B4                   
+                    +Politics_B5                   
+                    +Entertainment_Culture1        
+                    +Entertainment_Culture2        
+                    +Entertainment_Culture3        
+                    +Entertainment_Culture4        
+                    +Entertainment_Culture5        
+                    +Business_tech_internetCulture1
+                    +Business_tech_internetCulture2
+                    +Business_tech_internetCulture3
+                    +Business_tech_internetCulture4
+                    +Business_tech_internetCulture5
+                    +Politics_A1                   
+                    +Politics_A2                   
+                    +Politics_A3                   
+                    +Politics_A4                   
+                    +Politics_A5                   
+                    +Art_leisure1                  
+                    +Art_leisure2                  
+                    +Art_leisure3                  
+                    +Art_leisure4+politics_B                    
+                    +Entertainment_Culture         
+                    +Business_tech_internetCulture 
+                    +Politics_A                    
+                    +num_images                    
+                    +num_links                     
+                    +wiki_links                    
+                    +pos_score                     
+                    +neg_score                     
+                    +neu_score                     
+                    +compound_score                
+                    +flesh_score                   
+                    +WordCount                     
+                    +WordCountTitle                
+                    +time,
+                    data=modelme2)
+summary(bouncereg)
+sapply(c("logit","probit","cloglog","cauchit","loglog"), 
+       function(x) logLik(update(betareg2,link=x)))
+
+
+bouncereg2 <- betareg(modelme2$Bounce.Rate ~ Pageviews
+                                  +X..Exit                       
+                                  +Politics_B5                   
+                                  +Entertainment_Culture1        
+                                  +Business_tech_internetCulture3
+                                  +Politics_A3                  
+                                  +Art_leisure2                  
+                                  +Art_leisure3                  
+                                  +time,
+                                  data=modelme2)
+summary(bouncereg2)
+sapply(c("logit","probit","cloglog","cauchit","loglog"), 
+       function(x) logLik(update(betareg2,link=x)))
+
+lrtest(bouncereg,bouncereg2)
+
+coef(betareg2)
