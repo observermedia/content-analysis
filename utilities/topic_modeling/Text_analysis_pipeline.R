@@ -28,7 +28,7 @@ source('topicmodel_utilities.R')
 
 
 
-json_file <- fromJSON(file='clean_data2.json') 
+json_file <- fromJSON(file='clean_data_links.json') 
 json_file <- lapply(json_file,function(x){
   x[sapply(x,is.null)]<-NA
   unlist(x)
@@ -42,8 +42,12 @@ df$content <- as.character(df$content)
 #remove json_file
 rm(json_file)
 
+mystops<-read.csv('mystops.csv')
+mystops<- mystops$a
 # Clean text for topic modeling and create DTM -------------------
 
+
+df<- df[sample(nrow(df), 4500), ]
 
 #TODO: Fix so it reads in more than 1 document to corpus
 #remove anything between  [ ] 
@@ -58,19 +62,19 @@ content<- VCorpus(VectorSource(df$content))
 #Currently runs on 2 cores, specificy mc.cores param to adjust
 content <- tm_map(content,content_transformer(function(x) iconv(x, to='UTF-8-MAC', sub='byte')), mc.cores=1)
 
-content.clean <- tm_map(content, stripWhitespace)                                 #strip whitespace
-content.clean <- tm_map(content.clean,removeNumbers)                              #remove numbers
+
+content.clean <- tm_map(content,removeNumbers)                                    #remove numbers
 content.clean <- tm_map(content.clean,removePunctuation)                          #remove punctuation
 content.clean <- tm_map(content.clean,content_transformer(tolower))               #convert to lower case
-content.clean <- tm_map(content.clean,removeWords,stopwords("english"))           #removestop words
+content.clean <- tm_map(content.clean,removeWords,mystops)                        #removestop words
 content.clean <- tm_map(content.clean,stemDocument)                               #stem words
+content.clean <- tm_map(content.clean, stripWhitespace)                           #strip whitespace
 
 #create dtm
 dtm <- DocumentTermMatrix(content.clean, control = list(weighting = weightTf))
 
 #removing empty rows from dtm (i.e. empty docs)
 #Keep 1-1 correspondance between dtm and corpus
-
 
 rowsums <- apply(dtm,1,sum)
 empty.rows <- dtm[rowsums == 0, ]$dimnames[1][[1]]
@@ -81,10 +85,8 @@ df.new<-df[-as.numeric(empty.rows),]
 
 # Topic Modeling ----------------------------------------------------------
 
-#TODO: optimize number of topics & discussion of trade off
-num_topics = 7
 
-#Start with lda we can build from here 
+num_topics <- 5
 lda_object<- LDA(dtm.new,num_topics)
 
 #CTM
@@ -93,7 +95,6 @@ lda_object<- LDA(dtm.new,num_topics)
 #etc...
 
 # Explore TM results (end of TM pipe) ------------------------------------------------------
-
 
 #Look at top 10 words in each topic
 terms(lda_object,10)
@@ -130,12 +131,9 @@ serVis(vizme,out.dir = 'viz_7topics')
 
 # Assign topic labels + model subtopics -----------------------------------
 
-#TODO: fix bug here with topic name assignment
 
-df.new<-df.new[,-c(10,9,8)]
 #Assing topic names here
-topicnames <- c('Music','Startups','International Politics', 'US Politics', 'NY Politics', 'Art', 'Culture')
-topicnames <- c('Culture','Music','Art', 'International politics', 'Startups', 'US Politics', 'NY Politics')
+topicnames <- c("Politics_B","Entertainment_Culture","Business_tech_internetCulture","Politics_A","Art_leisure")
 
 
 gammaDF <- as.data.frame(lda_object@gamma) 
@@ -152,9 +150,10 @@ ggplot(data=toptopics,aes(x=topic)) + geom_bar(fill='#99c2ff',colour='black') + 
 df.new<-cbind(df.new,toptopics$topic)
 df.new$topic <- df.new$'toptopics$topic'
 
+df<-cbind(df.new,gammaDF)
+temp_df<-cbind(temp_df,gammaDF)
+
 #can now filter on a particular topic and topic model again to discover subtopics
-
-
 
 
 

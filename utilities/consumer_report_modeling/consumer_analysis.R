@@ -78,20 +78,30 @@ df.new <- temp_df
 
 # 3) ----------------------------------------------------------------------
 
-bindme <- cbind(gammaDF,df.new)
+bindme <- temp_df
 
 bindme$Page<-gsub("http://observer.com", "", bindme$link ,perl = TRUE)
 
-bindme<- merge(x=bindme,y=merge_tmp, by = "Page")
+bindme<- merge(x=bindme,y=merge2, by = "Page")
 
 
 
 # 4) ----------------------------------------------------------------------
 
-modelme<- merge(x=consumer_reports, y=bindme, by = "Page")
+modelme <- merge(x=consumer_reports, y=bindme, by = "Page")
 modelme$Pageviews <- as.numeric(gsub(",","",modelme$Pageviews))
 modelme$WordCount <-sapply(gregexpr("\\W+", modelme$content), length) + 1
 modelme$WordCountTitle <- sapply(gregexpr("-+", modelme$title), length) + 1
+time <- modelme$Avg..Time.on.Page
+
+minute<- 0
+second<-0
+i<-1
+for (i in 1:length(time)){
+  minute[i]<-as.numeric(unlist(strsplit(as.character(time[i]), split=':', fixed=TRUE))[2])
+  second[i]<-as.numeric(unlist(strsplit(as.character(time[i]), split=':', fixed=TRUE))[3])
+}
+modelme$time<- (minute*60) + second
 
 
 # 5)  ----------------------------------------------------------------------
@@ -203,24 +213,6 @@ summary(US_Pol)
 
 
 # Average time on page ----------------------------------------------------
-
-
-time <- modelme$Avg..Time.on.Page
-
-minute<- 0
-second<-0
-hr<-0
-i<-1
-for (i in 1:length(time)){
-  minute[i]<-as.numeric(unlist(strsplit(as.character(time[i]), split=':', fixed=TRUE))[2])
-  second[i]<-as.numeric(unlist(strsplit(as.character(time[i]), split=':', fixed=TRUE))[3])
-}
-
-modelme$time<- (minute*60) + second
-
-
-
-
 
 y <- modelme$time
 mean(y)

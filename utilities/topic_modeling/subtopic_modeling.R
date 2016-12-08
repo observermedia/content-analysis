@@ -1,12 +1,11 @@
 
-#load in output from text_analysis script..
-load('LDA_7topics.RData')
-
 
 
 #set parameters
 nb_topics <- 5
-subtopic<- 'Culture'
+subtopic <- "Art_leisure"
+topicnames <-c('Art_leisure1','Art_leisure2','Art_leisure3','Art_leisure4','Art_leisure5')
+
 
 
 
@@ -32,12 +31,19 @@ content.new <- content[-as.numeric(empty.rows)]
 dfsub.new<-df[-as.numeric(empty.rows),]
 
 #topic model
-lda_object<- LDA(dtm,5)
+lda_object<- LDA(dtm,nb_topics)
 
 #output viz
 vizme <- topicmodels_json_ldavis(lda_object,content,dtm)
 serVis(vizme,out.dir = paste('viz_sub',subtopic,sep = ''))
 
+
+gammaDF_sub <- as.data.frame(lda_object@gamma) 
+names(gammaDF_sub) <- c(topicnames) #assign topic names here
+
+tmp<- cbind(gammaDF_sub,df)
+
+temp_df<-join(temp_df,tmp)
 
 
 
