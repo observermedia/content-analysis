@@ -245,5 +245,4 @@ sapply(c("logit","probit","cloglog","cauchit","loglog"),
        function(x) logLik(update(betareg2,link=x)))
 
 lrtest(bouncereg,bouncereg2)
-
 coef(betareg2)
