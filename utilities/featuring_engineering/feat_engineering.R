@@ -7,16 +7,11 @@
 
 # HTML pics ---------------------------------------------------------------
 
-
 num_images <- 0
 for (i in 1:nrow(df)){
   num_images[i]<-sum(str_count( df$content[i], "img class="))
 }
-
 df$num_images <- num_images
-
-
-
 
 # HTML_links --------------------------------------------------------------
 
@@ -30,7 +25,6 @@ wiki_links <- 0
 for (i in 1:nrow(df)){
   wiki_links[i]<-sum(str_count( df$content[i], '<a href="https://en.wikipedia'))
 }
-
 df$wiki_links <- wiki_links
 
 
@@ -40,12 +34,10 @@ df$wiki_links <- wiki_links
 sent_tmp <- read.csv('sent_scores.csv')
 sent_tmp<- sent_tmp[,c(4:8)]
 
-
 # Complexity score --------------------------------------------------------
 
 fles_tmp <- read.csv('word_complex_scores.csv')
 fles_tmp <- fles_tmp[,c(4,5)]
-
 
 # Bind to main dataframe for modeling --------------------------------------------------
 

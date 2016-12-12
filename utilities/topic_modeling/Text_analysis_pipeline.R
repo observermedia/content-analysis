@@ -4,13 +4,7 @@
 
 #Load data -> clean -> topic modeling -> output results and viz
 
-
-#Ultimately wrap this whole pipeline into function...
-
-
 # Packages ----------------------------------------------------------------
-
-
 require(rjson)
 #require(RJSONIO)
 require(NLP)
@@ -21,12 +15,7 @@ require(LDAvis)
 
 source('topicmodel_utilities.R')
 
-
-
-
 # Load Data ---------------------------------------------------------------
-
-
 
 json_file <- fromJSON(file='clean_data_links.json') 
 json_file <- lapply(json_file,function(x){
@@ -46,8 +35,8 @@ mystops<-read.csv('mystops.csv')
 mystops<- mystops$a
 # Clean text for topic modeling and create DTM -------------------
 
-
-df<- df[sample(nrow(df), 4500), ]
+#uncomment below line if want to downsample to increase algorithm convergence time
+#df<- df[sample(nrow(df), 4500), ]
 
 #TODO: Fix so it reads in more than 1 document to corpus
 #remove anything between  [ ] 
@@ -61,8 +50,6 @@ df$content <- gsub("[\r\n]", "", df$content, perl = TRUE)
 content<- VCorpus(VectorSource(df$content))
 #Currently runs on 2 cores, specificy mc.cores param to adjust
 content <- tm_map(content,content_transformer(function(x) iconv(x, to='UTF-8-MAC', sub='byte')), mc.cores=1)
-
-
 content.clean <- tm_map(content,removeNumbers)                                    #remove numbers
 content.clean <- tm_map(content.clean,removePunctuation)                          #remove punctuation
 content.clean <- tm_map(content.clean,content_transformer(tolower))               #convert to lower case
@@ -75,7 +62,6 @@ dtm <- DocumentTermMatrix(content.clean, control = list(weighting = weightTf))
 
 #removing empty rows from dtm (i.e. empty docs)
 #Keep 1-1 correspondance between dtm and corpus
-
 rowsums <- apply(dtm,1,sum)
 empty.rows <- dtm[rowsums == 0, ]$dimnames[1][[1]]
 dtm.new <- dtm[rowsums > 0, ]
@@ -84,7 +70,6 @@ df.new<-df[-as.numeric(empty.rows),]
 
 
 # Topic Modeling ----------------------------------------------------------
-
 
 num_topics <- 5
 lda_object<- LDA(dtm.new,num_topics)
@@ -107,14 +92,11 @@ topics(lda_object, 5)[,1:5]
 # cluster documents in topic space
 document.topic.probabilities <- lda_object@gamma  # topic distribution for each document
 topic.space.kmeans.clusters <- kmeans(document.topic.probabilities, num_topics)
-
 table(topic.space.kmeans.clusters$cluster, df$`toptopics$topic`)
-
 
 #Within cluster sum of squares
 #i.e. distance from each point to centroid, want to minimize to acheive tight cluster
 topic.space.kmeans.clusters$withinss
-
 
 
 topic.space.clustered.news <- split(df.new, topic.space.kmeans.clusters$cluster)
@@ -123,14 +105,14 @@ topic.space.clustered.news[[1]][[2]]
 topic.space.clustered.news[[1]][[3]]
 
 
+# Generate Interactive viz ------------------------------------------------
 #Generate viz --opens in browser 
 vizme <- topicmodels_json_ldavis(lda_object,content.new,dtm.new)
-serVis(vizme,out.dir = 'viz_7topics')
+serVis(vizme,out.dir = 'viz_topics')
 
 
 
 # Assign topic labels + model subtopics -----------------------------------
-
 
 #Assing topic names here
 topicnames <- c("Politics_B","Entertainment_Culture","Business_tech_internetCulture","Politics_A","Art_leisure")
