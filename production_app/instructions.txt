@@ -1,0 +1,19 @@
+Use case:
+	Run topic model -> generate probabilistic distribution of current taxonomy 
+
+Requirements:
+	Python 
+	R
+	All .xml files in subdirectory under analysis should be in one directory
+	Unix system 
+	Command line arguments:
+	Path to directory containing xml files (python)
+	Number of topics hyperparameter for LDA (R)
+	
+Data workflow:
+	Scrap info from multiple raw xml files (python)
+	Save cleaned xml info to single json in current directory  (python)
+	Load and preprocessing json file (R)
+	Run topic modeling algorithm (R)
+	generate .csv and visual output in current directory (R)
+

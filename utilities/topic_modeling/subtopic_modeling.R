@@ -6,9 +6,6 @@ nb_topics <- 5
 subtopic <- "Art_leisure"
 topicnames <-c('Art_leisure1','Art_leisure2','Art_leisure3','Art_leisure4','Art_leisure5')
 
-
-
-
 df <- df.new[df.new$topic == subtopic,]
 
 #create dtm
