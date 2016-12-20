@@ -7,44 +7,54 @@ args = commandArgs(trailingOnly=TRUE)
 #output: (Interactive topic viz, topic distrubiton plot, .csv with topic probability scores and primary topic)
 ###
 
+
 # Packages and Functions----------------------------------------------------------------
-if (!require(rjson)){
-  install.packages(rjson)
+if (!require('rjson')){
+  install.packages('rjson')
 }
-if (!require(NLP)){
-  install.packages(NLP)
+if (!require('NLP')){
+  install.packages('NLP')
 }
-if (!require(tm)){
-  install.packages(tm)
-}
-
-if (!require(topicmodels)){
-  install.packages(topicmodels)
-}
-if (!require(SnowballC)){
-  install.packages(SnowballC)
-}
-if (!require(LDAvis)){
-  install.packages(LDAvis)
+if (!require('tm')){
+  install.packages('tm')
 }
 
+if (!require('topicmodels')){
+  install.packages('topicmodels')
+}
+if (!require('SnowballC')){
+  install.packages('SnowballC')
+}
+if (!require('LDAvis')){
+  install.packages('LDAvis')
+}
+if (!require('ggplot2')){
+  install.packages('ggplot2')
+}
+if (!require('ggplot2')){
+  install.packages('ggplot2')
+}
 topicmodels_json_ldavis <- function(fitted, corpus, doc_term){
   # Required packages
-  if (!require(topicmodels)){
-    install.packages(topicmodels)
+  if (!require('topicmodels')){
+    install.packages('topicmodels')
   }
-  if (!require(dplyr)){
-    install.packages(dplyr)
+  if (!require('dplyr')){
+    install.packages('dplyr')
   }
-  if (!require(stringi)){
-    install.packages(stringi)
+  if (!require('stringi')){
+    install.packages('stringi')
   }
-  if (!require(tm)){
-    install.packages(tm)
+  if (!require('tm')){
+    install.packages('tm')
   }
-  if (!require(LDAvis)){
-    install.packages(LDAvis)
+  if (!require('LDAvis')){
+    install.packages('LDAvis')
   }
+  if (!require('servr')){
+    install.packages('servr')
+  }
+  
   
   # Find required quantities
   phi <- posterior(fitted)$terms %>% as.matrix
@@ -93,6 +103,8 @@ mystops<-read.csv('mystops.csv')
 mystops<- mystops$a
 # Clean text for topic modeling and create DTM -------------------
 
+df <- df[sample(nrow(df), 1000), ]
+
 #remove anything between  [ ] 
 df$content <-gsub("\\[[^\\]]*\\]", "",df$content,perl = TRUE)
 #remove html tags from content
@@ -126,7 +138,24 @@ df.new<-df[-as.numeric(empty.rows),]
 
 
 # Topic Modeling ----------------------------------------------------------
-lda_object<- LDA(dtm.new,nb_topics)
+
+create_lda <- function(dtm,dtm.new,nb_topics){
+  out <- tryCatch(
+    {
+      LDA(dtm.new,nb_topics)
+    },
+    error=function(cond){
+      message(cond)
+      LDA(dtm,nb_topics) 
+    },
+    finally={
+      message("Topic Model Processed")
+    }
+  )
+    return(out)
+}
+
+lda_object <- create_lda(dtm,dtm.new,nb_topics)
 
 #CTM
 #ctm_object<- CTM(dtm.new,num_topics)
@@ -134,10 +163,39 @@ lda_object<- LDA(dtm.new,nb_topics)
 
 # Explore TM results in viz ------------------------------------------------------
 
-vizme <- topicmodels_json_ldavis(lda_object,content.new,dtm.new)
+#set working directory to an output folder
+setwd('./topic_model_output')
+
+create_viz <- function(lda_object,content.new,dtm.new,content,dtm){
+  out <- tryCatch(
+    {
+      topicmodels_json_ldavis(lda_object,content.new,dtm.new)
+    },
+    error=function(cond){
+     topicmodels_json_ldavis(lda_object,content,dtm)
+    },
+    error=function(cond){
+     topicmodels_json_ldavis(lda_object,content.new,dtm)
+    },
+    error=function(cond){
+     topicmodels_json_ldavis(lda_object,content,dtm.new)
+    },
+    finally={
+      message("Topic Model Viz Processed")
+    }
+  )
+  return(out)
+}
+
+
+vizme <- create_viz(lda_object,content.new,dtm.new,content,dtm)
 serVis(vizme,out.dir = 'viz_topics',open.browser = FALSE)
 
+
 # Assign topic labels + model subtopics -----------------------------------
+
+
+library(ggplot2)
 topicnames <- c(1:nb_topics)
 
 gammaDF <- as.data.frame(lda_object@gamma) 
@@ -150,14 +208,14 @@ toptopics <- as.data.frame(cbind(document = row.names(gammaDF),
 ggplot(data=toptopics,aes(x=topic)) + geom_bar(fill='#99c2ff',colour='black') + geom_text(stat='count',aes(label=..count..),vjust=-1)
 ggsave("topic_distribution.pdf")
 
-#bind topic assignment to original df
+#bind topic assignment to original df and clean up
 df.new<-cbind(df.new,toptopics$topic)
 df.new$topic <- df.new$'toptopics$topic'
-df.new <- subset(df, select=-c('toptopics$topic'))
+df.new <- df.new[ , !names(df.new) %in% c('toptopics$topic','author','label','sublabel','index')]
+df.new <- cbind(df.new,gammaDF)
 
 #write dataframe final as csv
 write.csv(df.new,'topicmodel_output.csv')
-
 
 
 

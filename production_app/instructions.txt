@@ -4,9 +4,11 @@ Use case:
 Requirements:
 	Python 
 	R
-	All .xml files in subdirectory under analysis should be in one directory
-	Unix system 
-	Command line arguments:
+	All .xml files in subdirectory under analysis should be in one directory named “recent_data”
+	mystops.csv must be contained in directory with .sh script (mystops.csv can be found on google drive)
+
+Command line arguments:
+	(edit these in .sh folder (before executing)
 	Path to directory containing xml files (python)
 	Number of topics hyperparameter for LDA (R)
 	
@@ -15,5 +17,11 @@ Data workflow:
 	Save cleaned xml info to single json in current directory  (python)
 	Load and preprocessing json file (R)
 	Run topic modeling algorithm (R)
-	generate .csv and visual output in current directory (R)
+	generate .csv and visual output in topic_model_output sub-directory (R)
+
+example command for .sh script:
+	python data_extract.py /Users/Clark/Desktop/production_testing/recent_data
+
+	Rscript tm_app.R 3
+
 

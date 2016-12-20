@@ -1,4 +1,5 @@
 #!/usr/bin/env python2
+
 # -*- coding: utf-8 -*-
 """
 Input: raw .xml data
@@ -16,7 +17,8 @@ def main():
     '''
     Main Script
     '''
-    path = str(arg[0])
+    path = str(sys.argv[1])
+    os.chdir(path)
     #init empty dict
     data = {'link':[], 'title':[], 'author':[]  ,'pubdate':[],'content':[], 'label':[], 'sublabel':[]}
     
@@ -29,7 +31,7 @@ def main():
         except:
             continue
     #for a single xml file, extract all content and fill in dict
-        for i in range(0, nb_docs):
+        for i in range(0, nb_docs/10):
             try:
                 link = xmldoc.getElementsByTagName('item')[i].getElementsByTagName('link')[0].firstChild.nodeValue
                 title = xmldoc.getElementsByTagName('wp:post_name')[i].firstChild.nodeValue
@@ -48,9 +50,13 @@ def main():
             data['content'].append(content)
             data['label'].append(label)
             data['sublabel'].append(sublabel)
-    
+            print(xmldoc + " processed")
+
+
+    os.chdir('..')
     dataframe = pd.DataFrame.from_dict(data)
-    dataframe.reset_index().to_json('clean_data_links.json',orient = 'records', path= os.listdir('.'))
+    dataframe.reset_index().to_json('clean_data_links.json',orient = 'records')
+    print("Data extraction complete... Now topic modeling.")
 
 if __name__ == '__main__':
     main()

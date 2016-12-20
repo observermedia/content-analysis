@@ -1,1 +1,7 @@
 This repo contains code for Observer text analysis project
+
+—production_app directory contains scripts to automatically generate topic models and output based on user provided data set
+
+-utilities contain all script for data extraction, cleaning, topic modeling pipeline, and ultimately consumer metric analysis 
+
+-Data for this project is hosted on the Google drive 

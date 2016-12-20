@@ -1,10 +1,17 @@
+###
+#Script to generate subtopics based on primary channel
+###
 
+#Need to iteraterate through and for each subtopic change the parameters below
 
-
+####
 #set parameters
-nb_topics <- 5
-subtopic <- "Art_leisure"
+nb_topics <- 5  #number of subtopics
+subtopic <-"Art_leisure" 
 topicnames <-c('Art_leisure1','Art_leisure2','Art_leisure3','Art_leisure4','Art_leisure5')
+####
+
+
 
 df <- df.new[df.new$topic == subtopic,]
 
@@ -37,10 +44,19 @@ serVis(vizme,out.dir = paste('viz_sub',subtopic,sep = ''))
 
 gammaDF_sub <- as.data.frame(lda_object@gamma) 
 names(gammaDF_sub) <- c(topicnames) #assign topic names here
-
 tmp<- cbind(gammaDF_sub,df)
 
+
+#Execute on first subtopic (i.e. first time this script is run for a document set)
+####
+temp_df<-join(df.new,tmp)
+####
+
+
+#Execute on all other subtopics
+####
 temp_df<-join(temp_df,tmp)
+####
 
 
 

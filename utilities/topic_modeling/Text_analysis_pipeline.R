@@ -107,8 +107,8 @@ topic.space.clustered.news[[1]][[3]]
 
 # Generate Interactive viz ------------------------------------------------
 #Generate viz --opens in browser 
-vizme <- topicmodels_json_ldavis(lda_object,content.new,dtm.new)
-serVis(vizme,out.dir = 'viz_topics')
+vizme <- topicmodels_json_ldavis(lda_object,content,dtm)
+serVis(vizme,out.dir = 'viz_5_Primarytopics')
 
 
 

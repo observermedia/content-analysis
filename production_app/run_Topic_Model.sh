@@ -1,9 +1,5 @@
 #!/bin/sh
 
-python data_extraction.py /Users/iclark/path/to/xml/data_directory;
+python data_extract.py /Users/Clark/Desktop/production_testing/recent_data
 
-Rscript --vanilla tm_app.Rscript 5;
-
-
-
- 
+Rscript tm_app.R 3
